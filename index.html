@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsHub - Global News Aggregator</title>
+    <!-- Google Fonts for professional typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <!-- Logo -->
+            <div class="logo">
+                <i class="fas fa-newspaper"></i>
+                <span>NewsHub</span>
+            </div>
+            
+            <!-- Navigation Links -->
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#" class="active" data-category="general">Home</a></li>
+                <li><a href="#" data-category="world">World</a></li>
+                <li><a href="#" data-category="technology">Technology</a></li>
+                <li><a href="#" data-category="business">Business</a></li>
+                <li><a href="#" data-category="science">Science</a></li>
+                <li><a href="#" data-category="sports">Sports</a></li>
+                <li><a href="#" data-category="entertainment">Entertainment</a></li>
+            </ul>
+            
+            <!-- Right Side Controls -->
+            <div class="nav-controls">
+                <!-- Search Box -->
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search news...">
+                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                </div>
+                
+                <!-- Bookmarks Toggle -->
+                <button class="icon-btn" id="bookmarksBtn" title="View Bookmarks">
+                    <i class="fas fa-bookmark"></i>
+                    <span class="badge" id="bookmarkCount">0</span>
+                </button>
+                
+                <!-- Dark Mode Toggle -->
+                <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                
+                <!-- Mobile Menu Toggle -->
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breaking News Ticker -->
+    <div class="breaking-news">
+        <div class="ticker-container">
+            <span class="ticker-label">BREAKING</span>
+            <div class="ticker-content" id="tickerContent">
+                Loading latest headlines...
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-container">
+        <!-- Hero Section (Featured News) -->
+        <section class="hero-section" id="heroSection">
+            <div class="hero-loading">
+                <div class="spinner"></div>
+                <p>Loading featured news...</p>
+            </div>
+        </section>
+
+        <!-- Category Title -->
+        <div class="section-header">
+            <h2 id="categoryTitle">Latest News</h2>
+            <div class="filter-controls">
+                <select id="sortSelect">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid"><i class="fas fa-th-large"></i></button>
+                    <button class="view-btn" data-view="list"><i class="fas fa-list"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- News Grid -->
+        <section class="news-grid" id="newsGrid">
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading articles...</p>
+            </div>
+        </section>
+
+        <!-- Load More Button -->
+        <div class="load-more-container">
+            <button class="load-more-btn" id="loadMoreBtn">Load More Articles</button>
+        </div>
+    </main>
+
+    <!-- Bookmarks Sidebar -->
+    <aside class="bookmarks-sidebar" id="bookmarksSidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-bookmark"></i> Your Bookmarks</h3>
+            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="bookmarks-list" id="bookmarksList">
+            <p class="empty-state">No bookmarks yet. Click the bookmark icon on any article to save it!</p>
+        </div>
+    </aside>
+
+    <!-- Overlay for sidebar -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Article Modal (for reading full article) -->
+    <div class="modal" id="articleModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+            <div class="modal-body" id="modalBody">
+                <!-- Content injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <div class="logo">
+                    <i class="fas fa-newspaper"></i>
+                    <span>NewsHub</span>
+                </div>
+                <p>Your trusted source for global news aggregation.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Categories</h4>
+                <ul>
+                    <li><a href="#" data-category="world">World</a></li>
+                    <li><a href="#" data-category="technology">Technology</a></li>
+                    <li><a href="#" data-category="business">Business</a></li>
+                    <li><a href="#" data-category="sports">Sports</a></li>
+                </ul>
+            </div>
+            <div class="footer-links">
+                <h4>About</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Contact</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p> NewsHub. Built for learning purposes. Data provided by NewsAPI.</p>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
