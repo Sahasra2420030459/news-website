@@ -3,171 +3,1756 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NewsHub - Global News Aggregator</title>
-    <!-- Google Fonts for professional typography -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
-    <!-- Font Awesome for icons -->
+    <title>NewsHub - Global News Aggregation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --primary: #2563eb; --primary-dark: #1d4ed8; --secondary: #64748b; --accent: #f59e0b;
+            --danger: #ef4444; --success: #22c55e; --info: #06b6d4; --warning: #f59e0b;
+            --bg: #f8fafc; --surface: #ffffff; --text: #0f172a; --text-secondary: #475569;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius: 12px; --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --surface: #1e293b; --text: #f1f5f9; --text-secondary: #94a3b8;
+            --border: #334155;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.3);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg); color: var(--text); line-height: 1.6; transition: var(--transition);
+        }
+        .header {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.9);
+        }
+        [data-theme="dark"] .header { background: rgba(15, 23, 42, 0.9); }
+        .header-content {
+            max-width: 1400px; margin: 0 auto; padding: 1rem 2rem;
+            display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+        }
+        .logo {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-size: 1.5rem; font-weight: 800; color: var(--primary);
+            text-decoration: none; transition: var(--transition); cursor: pointer;
+        }
+        .logo:hover { transform: scale(1.02); }
+        .logo i { font-size: 1.75rem; }
+        .nav { display: flex; gap: 0.5rem; list-style: none; }
+        .nav a {
+            text-decoration: none; color: var(--text-secondary); font-weight: 500;
+            padding: 0.5rem 1rem; border-radius: 8px; transition: var(--transition);
+            font-size: 0.9rem; cursor: pointer; border: none; background: none;
+        }
+        .nav a:hover, .nav a.active { color: var(--primary); background: rgba(37, 99, 235, 0.1); }
+        .search-container {
+            display: flex; align-items: center; gap: 0.75rem; flex: 1; max-width: 400px;
+        }
+        .search-box { position: relative; flex: 1; }
+        .search-box input {
+            width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem;
+            border: 2px solid var(--border); border-radius: var(--radius);
+            background: var(--bg); color: var(--text); font-size: 0.9rem;
+            transition: var(--transition); outline: none;
+        }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .search-box i { position: absolute; left: 0.875rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); }
+        .search-btn {
+            background: var(--primary); color: white; border: none;
+            padding: 0.75rem 1.25rem; border-radius: var(--radius); cursor: pointer;
+            transition: var(--transition); font-weight: 500;
+        }
+        .search-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .controls { display: flex; gap: 0.5rem; align-items: center; }
+        .control-btn {
+            background: var(--bg); border: 2px solid var(--border); color: var(--text-secondary);
+            width: 40px; height: 40px; border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: var(--transition); font-size: 1rem; position: relative;
+        }
+        .control-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+        .control-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .breaking-bar {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white;
+            padding: 0.75rem 2rem; display: flex; align-items: center; gap: 1rem; overflow: hidden;
+        }
+        .breaking-label {
+            background: rgba(255, 255, 255, 0.2); padding: 0.25rem 0.75rem;
+            border-radius: 6px; font-weight: 700; font-size: 0.75rem;
+            text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap;
+        }
+        .breaking-ticker { flex: 1; overflow: hidden; position: relative; }
+        .ticker-content {
+            display: flex; gap: 3rem; animation: ticker 30s linear infinite; white-space: nowrap;
+        }
+        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        .ticker-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; cursor: pointer; opacity: 0.9; transition: opacity 0.2s; }
+        .ticker-item:hover { opacity: 1; }
+        .ticker-dot { width: 6px; height: 6px; background: white; border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .mood-filter-bar {
+            background: var(--surface); border-bottom: 1px solid var(--border);
+            padding: 0.75rem 2rem; display: flex; align-items: center;
+            justify-content: center; gap: 1rem; flex-wrap: wrap;
+        }
+        .mood-btn {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1.25rem; border-radius: 50px;
+            border: 2px solid var(--border); background: var(--bg);
+            color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition);
+        }
+        .mood-btn:hover { transform: translateY(-2px); }
+        .mood-btn.positive.active { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border-color: #22c55e; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); }
+        .mood-btn.neutral.active { background: linear-gradient(135deg, #64748b, #475569); color: white; border-color: #64748b; box-shadow: 0 4px 15px rgba(100, 116, 139, 0.3); }
+        .mood-btn.serious.active { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-color: #ef4444; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+        .mood-btn .mood-emoji { font-size: 1.2rem; }
+
+        .main-wrapper {
+            max-width: 1400px; margin: 0 auto; padding: 2rem;
+            display: grid; grid-template-columns: 1fr 320px; gap: 2rem;
+        }
+        .main-content { min-width: 0; }
+        .sidebar-widgets {
+            position: sticky; top: 80px; height: fit-content;
+            display: flex; flex-direction: column; gap: 1.5rem;
+        }
+        .widget {
+            background: var(--surface); border-radius: var(--radius);
+            border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow);
+        }
+        .widget-header {
+            padding: 1rem 1.25rem; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 0.75rem;
+            font-weight: 700; font-size: 0.95rem;
+        }
+        .widget-header i { color: var(--primary); }
+        .widget-body { padding: 1rem 1.25rem; }
+        .widget-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem;
+        }
+        .widget-item:last-child { border-bottom: none; }
+        .widget-item-label { display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); }
+        .widget-item-value { font-weight: 700; font-family: monospace; }
+        .widget-item-change { font-size: 0.75rem; padding: 0.15rem 0.4rem; border-radius: 4px; font-weight: 600; }
+        .change-up { color: #22c55e; background: rgba(34, 197, 94, 0.1); }
+        .change-down { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+        .weather-widget { display: flex; align-items: center; justify-content: space-between; }
+        .weather-main { display: flex; align-items: center; gap: 0.75rem; }
+        .weather-icon { font-size: 2.5rem; }
+        .weather-temp { font-size: 1.5rem; font-weight: 700; }
+        .weather-desc { font-size: 0.8rem; color: var(--text-secondary); }
+        .weather-details { display: flex; gap: 1rem; font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.75rem; }
+        .crypto-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .crypto-item { background: var(--bg); border-radius: 8px; padding: 0.75rem; text-align: center; }
+        .crypto-symbol { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem; }
+        .crypto-price { font-family: monospace; font-weight: 600; font-size: 0.9rem; }
+
+        .world-map-section {
+            background: var(--surface); border-radius: var(--radius);
+            border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow);
+        }
+        .world-map-section .section-title { margin-bottom: 1rem; font-size: 1.25rem; }
+        .map-container { position: relative; width: 100%; height: 300px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+            border-radius: var(--radius); overflow: hidden;
+        }
+        .map-svg { width: 100%; height: 100%; }
+        .map-country {
+            fill: rgba(255,255,255,0.1); stroke: rgba(255,255,255,0.2); stroke-width: 0.5;
+            cursor: pointer; transition: all 0.3s ease;
+        }
+        .map-country:hover { fill: var(--primary); filter: drop-shadow(0 0 8px rgba(37, 99, 235, 0.5)); }
+        .map-country.active { fill: var(--accent); filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.6)); }
+        .map-tooltip {
+            position: absolute; background: var(--surface); color: var(--text);
+            padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600;
+            pointer-events: none; opacity: 0; transition: opacity 0.2s;
+            box-shadow: var(--shadow-lg); border: 1px solid var(--border); z-index: 10;
+        }
+        .map-tooltip.show { opacity: 1; }
+        .map-legend { display: flex; gap: 1.5rem; margin-top: 1rem; justify-content: center; flex-wrap: wrap; }
+        .map-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: var(--text-secondary); }
+        .map-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .featured-section { margin-bottom: 3rem; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+        .section-title { font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
+        .section-title i { color: var(--primary); }
+        .featured-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+        .hero-card { position: relative; border-radius: var(--radius); overflow: hidden; height: 400px; cursor: pointer; box-shadow: var(--shadow-lg); transition: var(--transition); }
+        .hero-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.15); }
+        .hero-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+        .hero-card:hover img { transform: scale(1.05); }
+        .hero-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; }
+        .hero-category { display: inline-block; background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.75rem; }
+        .hero-title { font-size: 1.75rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.75rem; }
+        .hero-meta { display: flex; gap: 1rem; font-size: 0.85rem; opacity: 0.8; }
+        .side-cards { display: flex; flex-direction: column; gap: 1.5rem; }
+        .side-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; flex: 1; }
+        .side-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .side-card img { width: 100%; height: 120px; object-fit: cover; }
+        .side-card-content { padding: 1rem; flex: 1; display: flex; flex-direction: column; }
+        .side-card-category { color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .side-card-title { font-weight: 600; font-size: 0.95rem; line-height: 1.4; margin-bottom: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .side-card-meta { font-size: 0.8rem; color: var(--text-secondary); margin-top: auto; }
+
+        .latest-section { margin-bottom: 3rem; }
+        .latest-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+        .filter-controls { display: flex; gap: 0.75rem; align-items: center; }
+        .sort-select { padding: 0.5rem 1rem; border: 2px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 0.9rem; cursor: pointer; outline: none; }
+        .view-toggle { display: flex; gap: 0.25rem; }
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+        .news-grid.list-view { grid-template-columns: 1fr; }
+        .news-grid.list-view .news-card { display: grid; grid-template-columns: 280px 1fr; }
+        .news-grid.list-view .news-card img { height: 100%; }
+        .news-card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: var(--transition); cursor: pointer; position: relative; }
+        .news-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+        .news-card img { width: 100%; height: 200px; object-fit: cover; transition: transform 0.3s; }
+        .news-card:hover img { transform: scale(1.05); }
+        .news-card-content { padding: 1.25rem; }
+        .news-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+        .news-category { color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .bookmark-btn { background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1.1rem; transition: var(--transition); padding: 0.25rem; }
+        .bookmark-btn:hover, .bookmark-btn.active { color: var(--accent); transform: scale(1.1); }
+        .bookmark-btn.active { color: var(--accent); }
+        .news-title { font-size: 1.1rem; font-weight: 600; line-height: 1.4; margin-bottom: 0.75rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-excerpt { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .news-footer { display: flex; align-items: center; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); }
+        .news-meta { display: flex; gap: 1rem; align-items: center; }
+        .news-meta span { display: flex; align-items: center; gap: 0.35rem; }
+        .sentiment-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .sentiment-positive { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .sentiment-neutral { background: rgba(100, 116, 139, 0.15); color: #64748b; }
+        .sentiment-negative { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+        .load-more { text-align: center; margin-top: 2rem; }
+        .load-more-btn { background: var(--surface); border: 2px solid var(--border); color: var(--text); padding: 0.875rem 2rem; border-radius: var(--radius); font-weight: 600; cursor: pointer; transition: var(--transition); font-size: 0.95rem; }
+        .load-more-btn:hover { border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); z-index: 500; opacity: 0; visibility: hidden; transition: all 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .article-modal { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); width: 90%; max-width: 900px; max-height: 90vh; background: var(--surface); border-radius: var(--radius); box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5); z-index: 501; opacity: 0; visibility: hidden; transition: all 0.3s ease; overflow: hidden; display: flex; flex-direction: column; }
+        .article-modal.active { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); }
+        .modal-header { position: relative; height: 300px; overflow: hidden; flex-shrink: 0; }
+        .modal-header img { width: 100%; height: 100%; object-fit: cover; }
+        .modal-header-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 2rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color: white; }
+        .modal-category { display: inline-block; background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.75rem; }
+        .modal-title { font-size: 1.75rem; font-weight: 700; line-height: 1.3; }
+        .modal-close { position: absolute; top: 1rem; right: 1rem; background: rgba(0,0,0,0.5); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 1.25rem; display: flex; align-items: center; justify-content: center; transition: var(--transition); z-index: 10; }
+        .modal-close:hover { background: rgba(0,0,0,0.8); transform: rotate(90deg); }
+        .modal-body { padding: 2rem; overflow-y: auto; flex: 1; }
+        .modal-meta { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-secondary); flex-wrap: wrap; }
+        .modal-meta span { display: flex; align-items: center; gap: 0.5rem; }
+        .modal-content-text { font-size: 1.05rem; line-height: 1.8; color: var(--text); }
+        .modal-content-text p { margin-bottom: 1.25rem; }
+        .modal-content-text h3 { font-size: 1.25rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--primary); }
+        .modal-content-text blockquote { border-left: 4px solid var(--primary); padding-left: 1.25rem; margin: 1.5rem 0; font-style: italic; color: var(--text-secondary); }
+        .modal-actions { display: flex; gap: 1rem; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .modal-btn { padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transition); border: none; display: flex; align-items: center; gap: 0.5rem; }
+        .modal-btn-primary { background: var(--primary); color: white; }
+        .modal-btn-primary:hover { background: var(--primary-dark); }
+        .modal-btn-secondary { background: var(--bg); color: var(--text); border: 2px solid var(--border); }
+        .modal-btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+        .modal-btn-tts { background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: white; }
+        .modal-btn-tts:hover { background: linear-gradient(135deg, #7c3aed, #6d28d9); }
+        .modal-btn-tts.playing { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+        .ai-summary-panel {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.05), rgba(139, 92, 246, 0.05));
+            border: 1px solid rgba(37, 99, 235, 0.2); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem;
+        }
+        .ai-summary-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
+        .ai-summary-header i { color: var(--primary); font-size: 1.25rem; }
+        .ai-summary-header h3 { font-size: 1.1rem; font-weight: 700; color: var(--primary); margin: 0; }
+        .ai-summary-btn { background: linear-gradient(135deg, var(--primary), #7c3aed); color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+        .ai-summary-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3); }
+        .ai-summary-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .ai-summary-content { display: none; margin-top: 1rem; }
+        .ai-summary-content.show { display: block; }
+        .ai-summary-box { background: var(--surface); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border-left: 3px solid var(--primary); }
+        .ai-summary-box h4 { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .ai-summary-box p, .ai-summary-box ul { font-size: 0.95rem; color: var(--text-secondary); line-height: 1.6; }
+        .ai-summary-box ul { padding-left: 1.25rem; }
+        .ai-summary-box ul li { margin-bottom: 0.35rem; }
+        .sentiment-indicator { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 700; font-size: 0.9rem; }
+        .sentiment-indicator.positive { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+        .sentiment-indicator.neutral { background: rgba(100, 116, 139, 0.15); color: #64748b; }
+        .sentiment-indicator.negative { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+
+        .bookmarks-sidebar { position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); z-index: 200; transition: right 0.3s ease; overflow-y: auto; }
+        .bookmarks-sidebar.open { right: 0; }
+        .bookmarks-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--surface); z-index: 10; }
+        .bookmarks-title { font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.75rem; }
+        .close-sidebar { background: none; border: none; color: var(--text-secondary); font-size: 1.25rem; cursor: pointer; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .close-sidebar:hover { background: var(--bg); color: var(--danger); }
+        .bookmarks-list { padding: 1rem; }
+        .bookmark-item { display: flex; gap: 1rem; padding: 1rem; border-radius: var(--radius); transition: var(--transition); cursor: pointer; margin-bottom: 0.5rem; }
+        .bookmark-item:hover { background: var(--bg); }
+        .bookmark-item img { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .bookmark-info { flex: 1; }
+        .bookmark-info h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.25rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .bookmark-info p { font-size: 0.8rem; color: var(--text-secondary); }
+        .remove-bookmark { background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0.25rem; transition: var(--transition); align-self: flex-start; }
+        .remove-bookmark:hover { color: var(--danger); }
+        .empty-bookmarks { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); }
+        .empty-bookmarks i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.5; }
+        .overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 150; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .overlay.active { opacity: 1; visibility: visible; }
+
+        .footer { background: var(--surface); border-top: 1px solid var(--border); padding: 3rem 2rem 2rem; margin-top: 4rem; }
+        .footer-content { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+        .footer-brand { display: flex; align-items: center; gap: 0.75rem; font-size: 1.25rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; }
+        .footer-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+        .footer-section h4 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+        .footer-links { list-style: none; }
+        .footer-links li { margin-bottom: 0.5rem; }
+        .footer-links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: var(--transition); display: flex; align-items: center; gap: 0.5rem; }
+        .footer-links a:hover { color: var(--primary); transform: translateX(4px); }
+        .footer-bottom { max-width: 1400px; margin: 2rem auto 0; padding-top: 2rem; border-top: 1px solid var(--border); text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.25rem; color: var(--text); cursor: pointer; }
+
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); color: var(--text); padding: 1rem 1.5rem; border-radius: var(--radius); box-shadow: var(--shadow-lg); border: 1px solid var(--border); display: flex; align-items: center; gap: 0.75rem; z-index: 300; opacity: 0; transition: all 0.3s ease; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+        .toast.info { border-left: 4px solid var(--info); }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        @media (max-width: 1200px) {
+            .main-wrapper { grid-template-columns: 1fr; }
+            .sidebar-widgets { position: relative; top: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+        }
+        @media (max-width: 1024px) {
+            .featured-grid { grid-template-columns: 1fr; }
+            .hero-card { height: 300px; }
+            .side-cards { flex-direction: row; overflow-x: auto; }
+            .side-card { min-width: 280px; }
+            .article-modal { width: 95%; max-height: 95vh; }
+            .modal-header { height: 200px; }
+            .modal-title { font-size: 1.25rem; }
+        }
+        @media (max-width: 768px) {
+            .header-content { padding: 1rem; flex-wrap: wrap; }
+            .nav { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); flex-direction: column; padding: 1rem; border-bottom: 1px solid var(--border); box-shadow: var(--shadow-lg); }
+            .nav.open { display: flex; }
+            .mobile-menu-btn { display: block; }
+            .search-container { order: 3; width: 100%; max-width: none; }
+            .main-wrapper { padding: 1rem; }
+            .news-grid { grid-template-columns: 1fr; }
+            .news-grid.list-view .news-card { grid-template-columns: 1fr; }
+            .bookmarks-sidebar { width: 100%; right: -100%; }
+            .hero-title { font-size: 1.25rem; }
+            .footer-content { grid-template-columns: 1fr; text-align: center; }
+            .modal-body { padding: 1rem; }
+            .modal-actions { flex-direction: column; }
+            .modal-btn { justify-content: center; }
+            .mood-filter-bar { padding: 0.75rem 1rem; }
+            .map-container { height: 200px; }
+            .sidebar-widgets { grid-template-columns: 1fr; }
+        }
+    </style>
+<base target="_blank">
 </head>
 <body>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <!-- Logo -->
-            <div class="logo">
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <a href="#" class="logo" onclick="resetHome(); return false;">
                 <i class="fas fa-newspaper"></i>
-                <span>NewsHub</span>
-            </div>
-            
-            <!-- Navigation Links -->
-            <ul class="nav-links" id="navLinks">
-                <li><a href="#" class="active" data-category="general">Home</a></li>
-                <li><a href="#" data-category="world">World</a></li>
-                <li><a href="#" data-category="technology">Technology</a></li>
-                <li><a href="#" data-category="business">Business</a></li>
-                <li><a href="#" data-category="science">Science</a></li>
-                <li><a href="#" data-category="sports">Sports</a></li>
-                <li><a href="#" data-category="entertainment">Entertainment</a></li>
-            </ul>
-            
-            <!-- Right Side Controls -->
-            <div class="nav-controls">
-                <!-- Search Box -->
+                NewsHub
+            </a>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul class="nav" id="nav">
+                    <li><a href="#" class="active" data-category="all" onclick="filterCategory('all', this); return false;">Home</a></li>
+                    <li><a href="#" data-category="world" onclick="filterCategory('world', this); return false;">World</a></li>
+                    <li><a href="#" data-category="technology" onclick="filterCategory('technology', this); return false;">Technology</a></li>
+                    <li><a href="#" data-category="business" onclick="filterCategory('business', this); return false;">Business</a></li>
+                    <li><a href="#" data-category="science" onclick="filterCategory('science', this); return false;">Science</a></li>
+                    <li><a href="#" data-category="sports" onclick="filterCategory('sports', this); return false;">Sports</a></li>
+                    <li><a href="#" data-category="entertainment" onclick="filterCategory('entertainment', this); return false;">Entertainment</a></li>
+                </ul>
+            </nav>
+            <div class="search-container">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="Search news...">
-                    <button id="searchBtn"><i class="fas fa-search"></i></button>
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search news..." oninput="performSearch()">
                 </div>
-                
-                <!-- Bookmarks Toggle -->
-                <button class="icon-btn" id="bookmarksBtn" title="View Bookmarks">
-                    <i class="fas fa-bookmark"></i>
-                    <span class="badge" id="bookmarkCount">0</span>
+                <button class="search-btn" onclick="performSearch()">
+                    <i class="fas fa-search"></i>
                 </button>
-                
-                <!-- Dark Mode Toggle -->
-                <button class="icon-btn" id="themeToggle" title="Toggle Theme">
+            </div>
+            <div class="controls">
+                <button class="control-btn" id="bookmarkToggle" onclick="toggleBookmarks()" title="Bookmarks">
+                    <i class="fas fa-bookmark"></i>
+                    <span id="bookmarkCount" style="position: absolute; top: -5px; right: -5px; background: var(--danger); color: white; font-size: 0.7rem; width: 18px; height: 18px; border-radius: 50%; display: none; align-items: center; justify-content: center;">0</span>
+                </button>
+                <button class="control-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle Theme">
                     <i class="fas fa-moon"></i>
                 </button>
-                
-                <!-- Mobile Menu Toggle -->
-                <button class="menu-toggle" id="menuToggle">
-                    <i class="fas fa-bars"></i>
+                <button class="control-btn" onclick="toggleView()" title="Toggle View">
+                    <i class="fas fa-list" id="viewIcon"></i>
                 </button>
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Breaking News Ticker -->
-    <div class="breaking-news">
-        <div class="ticker-container">
-            <span class="ticker-label">BREAKING</span>
+    <!-- Breaking News -->
+    <div class="breaking-bar">
+        <span class="breaking-label">Breaking</span>
+        <div class="breaking-ticker">
             <div class="ticker-content" id="tickerContent">
-                Loading latest headlines...
+                <div class="ticker-item"><span class="ticker-dot"></span> ISRO Chandrayaan-4 Successfully Launches from Sriharikota</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Indian Rupee Strengthens as Forex Reserves Cross $700 Billion</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> India Defeats Pakistan in ICC World Cup Final at Wankhede</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Monsoon Arrives Early: IMD Predicts Above-Normal Rainfall</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Tesla Announces Mega Manufacturing Hub in Gujarat</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Indian Women's Cricket Team Wins T20 World Cup at Lord's</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> ISRO Chandrayaan-4 Successfully Launches from Sriharikota</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Indian Rupee Strengthens as Forex Reserves Cross $700 Billion</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> India Defeats Pakistan in ICC World Cup Final at Wankhede</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Monsoon Arrives Early: IMD Predicts Above-Normal Rainfall</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Tesla Announces Mega Manufacturing Hub in Gujarat</div>
+                <div class="ticker-item"><span class="ticker-dot"></span> Indian Women's Cricket Team Wins T20 World Cup at Lord's</div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="main-container">
-        <!-- Hero Section (Featured News) -->
-        <section class="hero-section" id="heroSection">
-            <div class="hero-loading">
-                <div class="spinner"></div>
-                <p>Loading featured news...</p>
-            </div>
-        </section>
+    <!-- Mood Filter Bar -->
+    <div class="mood-filter-bar">
+        <span style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">Filter by Mood:</span>
+        <button class="mood-btn positive" id="moodPositive" onclick="filterByMood('positive')">
+            <span class="mood-emoji">&#x1F60A;</span> Positive News
+        </button>
+        <button class="mood-btn neutral" id="moodNeutral" onclick="filterByMood('neutral')">
+            <span class="mood-emoji">&#x1F610;</span> Neutral News
+        </button>
+        <button class="mood-btn serious" id="moodSerious" onclick="filterByMood('serious')">
+            <span class="mood-emoji">&#x26A0;&#xFE0F;</span> Serious News
+        </button>
+    </div>
 
-        <!-- Category Title -->
-        <div class="section-header">
-            <h2 id="categoryTitle">Latest News</h2>
-            <div class="filter-controls">
-                <select id="sortSelect">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                </select>
-                <div class="view-toggle">
-                    <button class="view-btn active" data-view="grid"><i class="fas fa-th-large"></i></button>
-                    <button class="view-btn" data-view="list"><i class="fas fa-list"></i></button>
+    <!-- Main Content with Sidebar -->
+    <div class="main-wrapper">
+        <div class="main-content">
+            <!-- World Map Section -->
+            <section class="world-map-section" id="worldMapSection">
+                <h2 class="section-title"><i class="fas fa-globe-americas"></i> Explore News by Region</h2>
+                <div class="map-container" id="mapContainer">
+                    <svg class="map-svg" viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg">
+                        <path class="map-country" data-country="canada" d="M140,40 L300,40 L320,60 L300,80 L280,80 L150,80 L130,60 Z" />
+                        <path class="map-country" data-country="usa" d="M150,80 L280,80 L300,120 L320,140 L300,180 L280,200 L250,220 L200,210 L180,190 L160,170 L140,150 L130,120 L140,100 Z" />
+                        <path class="map-country" data-country="brazil" d="M280,250 L340,250 L360,280 L350,320 L330,360 L300,380 L280,360 L270,320 L260,280 Z" />
+                        <path class="map-country" data-country="uk" d="M430,90 L450,90 L455,110 L445,120 L435,110 Z" />
+                        <path class="map-country" data-country="france" d="M455,110 L475,110 L480,130 L470,140 L460,130 Z" />
+                        <path class="map-country" data-country="germany" d="M475,100 L495,100 L500,120 L490,130 L480,120 Z" />
+                        <path class="map-country" data-country="russia" d="M500,40 L800,40 L850,60 L800,80 L700,90 L600,80 L550,70 L500,60 Z" />
+                        <path class="map-country" data-country="china" d="M650,140 L750,140 L780,160 L760,190 L720,200 L680,190 L650,170 Z" />
+                        <path class="map-country" data-country="india" d="M620,180 L680,180 L700,200 L690,230 L660,240 L630,220 Z" />
+                        <path class="map-country" data-country="japan" d="M780,130 L800,130 L810,150 L800,170 L785,160 Z" />
+                        <path class="map-country" data-country="egypt" d="M520,160 L560,160 L570,180 L550,190 L530,180 Z" />
+                        <path class="map-country" data-country="southafrica" d="M520,320 L580,320 L590,350 L570,370 L540,360 L520,340 Z" />
+                        <path class="map-country" data-country="australia" d="M780,320 L880,320 L890,360 L860,380 L820,370 L790,350 Z" />
+                    </svg>
+                    <div class="map-tooltip" id="mapTooltip"></div>
+                </div>
+                <div class="map-legend">
+                    <div class="map-legend-item">
+                        <div class="map-legend-dot" style="background: var(--primary);"></div>
+                        <span>Click any country to filter news</span>
+                    </div>
+                    <div class="map-legend-item">
+                        <div class="map-legend-dot" style="background: var(--accent);"></div>
+                        <span>Active selection</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Featured Section -->
+            <section class="featured-section" id="featuredSection">
+                <div class="section-header">
+                    <h2 class="section-title"><i class="fas fa-star"></i> Featured News</h2>
+                </div>
+                <div class="featured-grid" id="featuredGrid"></div>
+            </section>
+
+            <!-- Latest News -->
+            <section class="latest-section">
+                <div class="latest-header">
+                    <h2 class="section-title" id="latestTitle"><i class="fas fa-clock"></i> Latest News</h2>
+                    <div class="filter-controls">
+                        <select class="sort-select" id="sortSelect" onchange="sortNews()">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="popular">Most Popular</option>
+                        </select>
+                        <div class="view-toggle">
+                            <button class="control-btn active" onclick="setView('grid')" title="Grid View">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button class="control-btn" onclick="setView('list')" title="List View">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="news-grid" id="newsGrid"></div>
+                <div class="load-more">
+                    <button class="load-more-btn" onclick="loadMore()">
+                        <i class="fas fa-spinner fa-spin" style="display: none;"></i>
+                        Load More Articles
+                    </button>
+                </div>
+            </section>
+        </div>
+
+        <!-- Live Widgets Sidebar -->
+        <aside class="sidebar-widgets" id="sidebarWidgets">
+            <!-- Stock Market Widget (INR) -->
+            <div class="widget">
+                <div class="widget-header"><i class="fas fa-chart-line"></i> Stock Market (INR)</div>
+                <div class="widget-body" id="stockWidget">
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-building" style="color: #1e40af;"></i> Reliance</div><div><span class="widget-item-value">&#x20B9;2,845.30</span><span class="widget-item-change change-up">+1.2%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-laptop-code" style="color: #0ea5e9;"></i> TCS</div><div><span class="widget-item-value">&#x20B9;4,120.50</span><span class="widget-item-change change-up">+0.8%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-university" style="color: #059669;"></i> HDFC Bank</div><div><span class="widget-item-value">&#x20B9;1,678.20</span><span class="widget-item-change change-down">-0.5%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-shopping-cart" style="color: #f59e0b;"></i> Infosys</div><div><span class="widget-item-value">&#x20B9;1,892.75</span><span class="widget-item-change change-up">+2.1%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-car" style="color: #dc2626;"></i> Tata Motors</div><div><span class="widget-item-value">&#x20B9;956.40</span><span class="widget-item-change change-down">-1.3%</span></div></div>
                 </div>
             </div>
-        </div>
-
-        <!-- News Grid -->
-        <section class="news-grid" id="newsGrid">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <p>Loading articles...</p>
+            <!-- Crypto Widget -->
+            <div class="widget">
+                <div class="widget-header"><i class="fab fa-bitcoin"></i> Crypto Prices (INR)</div>
+                <div class="widget-body">
+                    <div class="crypto-grid" id="cryptoWidget">
+                        <div class="crypto-item"><div class="crypto-symbol" style="color: #f7931a;">BTC</div><div class="crypto-price">&#x20B9;56,42,000</div><div class="widget-item-change change-up" style="font-size: 0.75rem;">+2.4%</div></div>
+                        <div class="crypto-item"><div class="crypto-symbol" style="color: #627eea;">ETH</div><div class="crypto-price">&#x20B9;2,94,500</div><div class="widget-item-change change-up" style="font-size: 0.75rem;">+1.8%</div></div>
+                        <div class="crypto-item"><div class="crypto-symbol" style="color: #26a17b;">USDT</div><div class="crypto-price">&#x20B9;83.75</div><div class="widget-item-change change-up" style="font-size: 0.75rem;">+0.01%</div></div>
+                        <div class="crypto-item"><div class="crypto-symbol" style="color: #f0b90b;">BNB</div><div class="crypto-price">&#x20B9;51,200</div><div class="widget-item-change change-down" style="font-size: 0.75rem;">-0.3%</div></div>
+                    </div>
+                </div>
             </div>
-        </section>
+            <!-- Gold Widget -->
+            <div class="widget">
+                <div class="widget-header"><i class="fas fa-coins" style="color: #ffd700;"></i> Gold & Commodities (INR)</div>
+                <div class="widget-body" id="goldWidget">
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-circle" style="color: #ffd700; font-size: 0.6rem;"></i>Gold (10g, 24K)</div><div><span class="widget-item-value">&#x20B9;1,47,239</span><span class="widget-item-change change-down">-0.9%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-circle" style="color: #c0c0c0; font-size: 0.6rem;"></i>Silver (1kg)</div><div><span class="widget-item-value">&#x20B9;95,800</span><span class="widget-item-change change-up">+1.2%</span></div></div>
+                    <div class="widget-item"><div class="widget-item-label"><i class="fas fa-oil-can" style="color: #333;"></i>Crude Oil (bbl)</div><div><span class="widget-item-value">&#x20B9;6,580</span><span class="widget-item-change change-down">-0.8%</span></div></div>
+                </div>
+            </div>
+            <!-- Currency Widget -->
+            <div class="widget">
+                <div class="widget-header"><i class="fas fa-exchange-alt"></i> Currency Exchange</div>
+                <div class="widget-body" id="currencyWidget">
+                    <div class="widget-item"><div class="widget-item-label">USD/INR</div><span class="widget-item-value">94.31</span></div>
+                    <div class="widget-item"><div class="widget-item-label">EUR/INR</div><span class="widget-item-value">101.45</span></div>
+                    <div class="widget-item"><div class="widget-item-label">GBP/INR</div><span class="widget-item-value">119.20</span></div>
+                    <div class="widget-item"><div class="widget-item-label">JPY/INR</div><span class="widget-item-value">0.58</span></div>
+                </div>
+            </div>
+            <!-- Weather Widget -->
+            <div class="widget">
+                <div class="widget-header"><i class="fas fa-cloud-sun"></i> Weather - New Delhi</div>
+                <div class="widget-body">
+                    <div class="weather-widget" id="weatherWidget">
+                        <div class="weather-main">
+                            <div class="weather-icon">&#x2600;&#xFE0F;</div>
+                            <div><div class="weather-temp">38&#xB0;C</div><div class="weather-desc">Hot & Sunny</div></div>
+                        </div>
+                    </div>
+                    <div class="weather-details">
+                        <span><i class="fas fa-tint"></i> 32%</span>
+                        <span><i class="fas fa-wind"></i> 8 km/h</span>
+                        <span><i class="fas fa-eye"></i> 12 km</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
 
-        <!-- Load More Button -->
-        <div class="load-more-container">
-            <button class="load-more-btn" id="loadMoreBtn">Load More Articles</button>
+    <!-- Article Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+    <div class="article-modal" id="articleModal">
+        <div class="modal-header" id="modalHeader">
+            <img src="" alt="" id="modalImage">
+            <div class="modal-header-overlay">
+                <span class="modal-category" id="modalCategory">Category</span>
+                <h2 class="modal-title" id="modalTitle">Article Title</h2>
+            </div>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
         </div>
-    </main>
+        <div class="modal-body">
+            <!-- AI Summary Panel -->
+            <div class="ai-summary-panel" id="aiSummaryPanel">
+                <div class="ai-summary-header">
+                    <i class="fas fa-robot"></i>
+                    <h3>AI News Summarizer</h3>
+                </div>
+                <button class="ai-summary-btn" id="aiSummaryBtn" onclick="generateAISummary()">
+                    <i class="fas fa-magic"></i> Summarize in 30 Seconds
+                </button>
+                <div class="ai-summary-content" id="aiSummaryContent"></div>
+            </div>
+            <div class="modal-meta">
+                <span><i class="fas fa-user"></i> <span id="modalAuthor">Author</span></span>
+                <span><i class="fas fa-clock"></i> <span id="modalDate">Date</span></span>
+                <span><i class="fas fa-eye"></i> <span id="modalViews">Views</span></span>
+                <span><i class="fas fa-book-open"></i> <span id="modalReadTime">Read Time</span></span>
+                <span id="modalSentiment"></span>
+            </div>
+            <div class="modal-content-text" id="modalContent"></div>
+            <div class="modal-actions">
+                <button class="modal-btn modal-btn-primary" onclick="shareArticle()">
+                    <i class="fas fa-share-alt"></i> Share Article
+                </button>
+                <button class="modal-btn modal-btn-secondary" id="modalBookmarkBtn" onclick="toggleModalBookmark()">
+                    <i class="far fa-bookmark"></i> Bookmark
+                </button>
+                <button class="modal-btn modal-btn-tts" id="ttsBtn" onclick="toggleTTS()">
+                    <i class="fas fa-volume-up"></i> Listen
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Bookmarks Sidebar -->
+    <div class="overlay" id="overlay" onclick="toggleBookmarks()"></div>
     <aside class="bookmarks-sidebar" id="bookmarksSidebar">
-        <div class="sidebar-header">
-            <h3><i class="fas fa-bookmark"></i> Your Bookmarks</h3>
-            <button class="close-sidebar" id="closeSidebar"><i class="fas fa-times"></i></button>
+        <div class="bookmarks-header">
+            <h3 class="bookmarks-title"><i class="fas fa-bookmark"></i> Your Bookmarks</h3>
+            <button class="close-sidebar" onclick="toggleBookmarks()"><i class="fas fa-times"></i></button>
         </div>
         <div class="bookmarks-list" id="bookmarksList">
-            <p class="empty-state">No bookmarks yet. Click the bookmark icon on any article to save it!</p>
+            <div class="empty-bookmarks">
+                <i class="fas fa-bookmark"></i>
+                <p>No bookmarks yet. Click the bookmark icon on any article to save it!</p>
+            </div>
         </div>
     </aside>
 
-    <!-- Overlay for sidebar -->
-    <div class="overlay" id="overlay"></div>
-
-    <!-- Article Modal (for reading full article) -->
-    <div class="modal" id="articleModal">
-        <div class="modal-content">
-            <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
-            <div class="modal-body" id="modalBody">
-                <!-- Content injected by JS -->
-            </div>
-        </div>
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Article bookmarked!</span>
     </div>
-
-    <!-- Toast Notifications -->
-    <div class="toast-container" id="toastContainer"></div>
 
     <!-- Footer -->
     <footer class="footer">
         <div class="footer-content">
-            <div class="footer-brand">
-                <div class="logo">
-                    <i class="fas fa-newspaper"></i>
-                    <span>NewsHub</span>
-                </div>
-                <p>Your trusted source for global news aggregation.</p>
+            <div>
+                <div class="footer-brand"><i class="fas fa-newspaper"></i>NewsHub</div>
+                <p class="footer-desc">Your trusted source for global news aggregation. We bring you the latest stories from around the world, curated and verified.</p>
             </div>
-            <div class="footer-links">
+            <div class="footer-section">
                 <h4>Categories</h4>
-                <ul>
-                    <li><a href="#" data-category="world">World</a></li>
-                    <li><a href="#" data-category="technology">Technology</a></li>
-                    <li><a href="#" data-category="business">Business</a></li>
-                    <li><a href="#" data-category="sports">Sports</a></li>
+                <ul class="footer-links">
+                    <li><a href="#" onclick="filterCategory('world'); return false;"><i class="fas fa-globe"></i> World</a></li>
+                    <li><a href="#" onclick="filterCategory('technology'); return false;"><i class="fas fa-microchip"></i> Technology</a></li>
+                    <li><a href="#" onclick="filterCategory('business'); return false;"><i class="fas fa-chart-line"></i> Business</a></li>
+                    <li><a href="#" onclick="filterCategory('science'); return false;"><i class="fas fa-flask"></i> Science</a></li>
                 </ul>
             </div>
-            <div class="footer-links">
-                <h4>About</h4>
-                <ul>
-                    <li><a href="#">About Us</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Contact</a></li>
+            <div class="footer-section">
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="#"><i class="fas fa-info-circle"></i> About Us</a></li>
+                    <li><a href="#"><i class="fas fa-envelope"></i> Contact</a></li>
+                    <li><a href="#"><i class="fas fa-shield-alt"></i> Privacy Policy</a></li>
+                    <li><a href="#"><i class="fas fa-file-contract"></i> Terms of Service</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Connect</h4>
+                <ul class="footer-links">
+                    <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+                    <li><a href="#"><i class="fab fa-facebook"></i> Facebook</a></li>
+                    <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
+                    <li><a href="#"><i class="fab fa-instagram"></i> Instagram</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
-            <p> NewsHub. Built for learning purposes. Data provided by NewsAPI.</p>
+            <p>&copy; 2026 NewsHub. All rights reserved. Your trusted source for global news aggregation.</p>
         </div>
     </footer>
+<script>
+// ==================== NEWS DATA ====================
+const newsArticles = [
+    {
+        id: 1,
+        title: "India's ISRO Successfully Launches Chandrayaan-4 Lunar Mission",
+        excerpt: "The Indian Space Research Organisation has successfully launched the Chandrayaan-4 mission, marking India's most ambitious lunar exploration endeavor yet. The mission aims to establish a permanent research station on the Moon's south pole.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?w=800&q=80",
+        author: "Ravi Sharma",
+        date: "2026-06-21",
+        views: 125430,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: true,
+        hero: true,
+        content: `<p>India's space program has reached new heights with the successful launch of Chandrayaan-4, the nation's most ambitious lunar mission to date. The spacecraft, launched from the Satish Dhawan Space Centre in Sriharikota, carries advanced scientific instruments designed to explore the Moon's south pole region.</p>
+        <h3>A New Era of Lunar Exploration</h3>
+        <p>The mission represents a significant leap forward for India's space capabilities. Unlike previous missions, Chandrayaan-4 includes a lunar lander, rover, and an orbiter that will work in tandem to conduct comprehensive studies of the lunar surface.</p>
+        <blockquote>"This mission will establish India as a leading player in lunar exploration and pave the way for future human missions," said Dr. S. Somanath, Chairman of ISRO.</blockquote>
+        <p>The primary objectives include mapping water ice deposits, analyzing lunar soil composition, and testing technologies crucial for establishing a permanent research station. The mission is expected to operate for at least two years, providing unprecedented data about the Moon's resources.</p>
+        <h3>International Collaboration</h3>
+        <p>Several international space agencies, including NASA and ESA, have contributed instruments to the mission. This collaboration highlights India's growing role in the global space community and sets the stage for future joint missions to Mars and beyond.</p>`
+    },
+    {
+        id: 2,
+        title: "Indian Rupee Strengthens Against Dollar as Forex Reserves Hit Record High",
+        excerpt: "The Reserve Bank of India reports forex reserves crossing $700 billion, leading to the rupee's strongest position in three years against the US dollar.",
+        category: "business",
+        image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+        author: "Priya Nair",
+        date: "2026-06-20",
+        views: 98200,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: true,
+        hero: false,
+        content: `<p>India's foreign exchange reserves have reached an unprecedented milestone, crossing the $700 billion mark for the first time in the nation's history. This achievement has strengthened the Indian Rupee, which is now trading at its strongest level against the US dollar in over three years.</p>
+        <h3>Record-Breaking Reserves</h3>
+        <p>The Reserve Bank of India's latest weekly data shows reserves at $702.3 billion, driven by strong foreign portfolio investments and robust export earnings. The IT sector and pharmaceutical exports have been particularly strong contributors.</p>
+        <blockquote>"This level of reserves provides India with a strong buffer against global economic shocks and gives us significant policy flexibility," said RBI Governor Shaktikanta Das.</blockquote>
+        <p>The rupee has appreciated by nearly 4% against the dollar over the past quarter, making it one of the best-performing currencies in Asia. Analysts expect the trend to continue as India's economic fundamentals remain strong.</p>`
+    },
+    {
+        id: 3,
+        title: "AI Revolution: Indian Startups Lead Global Innovation in 2026",
+        excerpt: "Bengaluru and Hyderabad emerge as the world's top AI hubs as Indian startups secure record-breaking funding for artificial intelligence solutions.",
+        category: "technology",
+        image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80",
+        author: "Arjun Mehta",
+        date: "2026-06-20",
+        views: 87600,
+        readTime: "6 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: true,
+        hero: false,
+        content: `<p>India's technology ecosystem is experiencing an unprecedented boom, with artificial intelligence startups in Bengaluru and Hyderabad attracting global attention. In the first half of 2026, Indian AI companies raised over $12 billion in funding, surpassing previous records.</p>
+        <h3>The Rise of Desi AI</h3>
+        <p>From healthcare diagnostics to agricultural optimization, Indian AI startups are solving uniquely local problems while creating solutions with global applicability. Companies like Krutrim AI and Sarvam AI have achieved unicorn status, developing large language models tailored for Indian languages.</p>
+        <blockquote>"India is not just adopting AI; we're adapting it to solve problems that Western companies never considered," said Nandan Nilekani, co-founder of Infosys.</blockquote>
+        <p>The government's AI Mission has allocated Rs 10,000 crore for AI research and development, creating a supportive ecosystem for innovation. IITs and IISc have established dedicated AI research centers, producing world-class talent.</p>`
+    },
+    {
+        id: 4,
+        title: "India vs Pakistan: ICC World Cup Final Creates History at Wankhede",
+        excerpt: "In a nail-biting finish, India defeats Pakistan by 3 wickets to lift the ICC World Cup trophy in front of a packed Wankhede Stadium in Mumbai.",
+        category: "sports",
+        image: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=800&q=80",
+        author: "Sachin Tendulkar Jr.",
+        date: "2026-06-19",
+        views: 342000,
+        readTime: "7 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Wankhede Stadium in Mumbai witnessed history as India defeated arch-rivals Pakistan in a thrilling ICC World Cup final. Chasing 298, India reached the target with just 3 balls to spare, sparking celebrations across the nation.</p>
+        <h3>A Match for the Ages</h3>
+        <p>Captain Shubman Gill's unbeaten 112 formed the backbone of India's chase, while Jasprit Bumrah's crucial wickets in the middle overs kept Pakistan's total in check. The match had everything - drama, tension, and moments of pure brilliance.</p>
+        <blockquote>"This is for the billion fans who believed in us. We played for India, and India won today," said an emotional Shubman Gill during the post-match presentation.</blockquote>
+        <p>The victory marks India's third World Cup win and cements their status as the dominant force in world cricket. Streets across India erupted in celebration, with fans dancing through the night.</p>`
+    },
+    {
+        id: 5,
+        title: "Monsoon Arrives Early: IMD Predicts Above-Normal Rainfall for 2026",
+        excerpt: "The India Meteorological Department announces that the southwest monsoon has arrived in Kerala two weeks ahead of schedule, promising relief for farmers.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?w=800&q=80",
+        author: "Dr. K. J. Ramesh",
+        date: "2026-06-19",
+        views: 156000,
+        readTime: "3 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The India Meteorological Department (IMD) has confirmed that the southwest monsoon has made its onset over Kerala, arriving approximately two weeks earlier than the normal date of June 1. This early arrival is attributed to favorable atmospheric conditions in the Indian Ocean.</p>
+        <h3>Above-Normal Rainfall Expected</h3>
+        <p>IMD's latest forecast predicts above-normal rainfall for the 2026 monsoon season, with cumulative rainfall expected to be 106% of the long-period average. This is welcome news for India's agricultural sector, which employs nearly 45% of the population.</p>
+        <blockquote>"The early onset and positive forecast should boost kharif sowing operations across the country," said IMD Director General Mrutyunjay Mohapatra.</blockquote>
+        <p>However, the department has also warned of localized heavy rainfall events and urged states to prepare for potential flooding in vulnerable areas.</p>`
+    },
+    {
+        id: 6,
+        title: "Tesla Announces Major Manufacturing Hub in Gujarat",
+        excerpt: "Elon Musk confirms Tesla's largest Asian manufacturing facility will be built in Gujarat, creating over 50,000 jobs and boosting India's EV ecosystem.",
+        category: "business",
+        image: "https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800&q=80",
+        author: "Vikram Patel",
+        date: "2026-06-18",
+        views: 234000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>Tesla has officially announced its plans to establish a mega manufacturing facility in Gujarat, marking one of the largest foreign direct investments in India's automotive history. The facility, estimated to cost $5 billion, will have an annual production capacity of 500,000 electric vehicles.</p>
+        <h3>A Game-Changer for India's EV Industry</h3>
+        <p>The Gujarat facility will not only manufacture vehicles for the Indian market but also serve as an export hub for Southeast Asia, the Middle East, and Africa. The project is expected to create over 50,000 direct and indirect jobs.</p>
+        <blockquote>"India is the future of sustainable transportation. This facility will be our most advanced manufacturing plant globally," said Elon Musk during the announcement ceremony in Gandhinagar.</blockquote>
+        <p>The Gujarat government has offered extensive infrastructure support, including dedicated power supply and port connectivity. The first vehicles are expected to roll out by late 2027.</p>`
+    },
+    {
+        id: 7,
+        title: "New Delhi Hosts G20 Summit: World Leaders Discuss Climate Finance",
+        excerpt: "The G20 Summit in New Delhi concludes with a historic agreement on climate financing, with developed nations pledging $200 billion annually for developing countries.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1529107386315-e1a2ed56a05f?w=800&q=80",
+        author: "Ananya Gupta",
+        date: "2026-06-18",
+        views: 189000,
+        readTime: "6 min",
+        sentiment: "neutral",
+        mood: "neutral",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The G20 Summit held in New Delhi has concluded with a landmark agreement on climate finance, with developed nations committing to provide $200 billion annually to help developing countries transition to clean energy and adapt to climate change impacts.</p>
+        <h3>Historic Climate Finance Deal</h3>
+        <p>The agreement, dubbed the 'New Delhi Climate Compact,' represents a significant increase from the previous $100 billion annual commitment. It includes provisions for technology transfer, capacity building, and loss and damage funding.</p>
+        <blockquote>"This is a watershed moment for global climate action. The developing world can now plan their energy transition with confidence," said UN Secretary-General Antonio Guterres.</blockquote>
+        <p>India, as the host nation, played a crucial role in bridging differences between developed and developing nations. Prime Minister Narendra Modi emphasized the principle of 'common but differentiated responsibilities' throughout the negotiations.</p>`
+    },
+    {
+        id: 8,
+        title: "Indian Scientists Develop Breakthrough Cancer Treatment Using Nanotechnology",
+        excerpt: "Researchers at AIIMS Delhi and IIT Bombay collaborate to develop a targeted drug delivery system that reduces chemotherapy side effects by 80%.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1576086213369-97a306d36557?w=800&q=80",
+        author: "Dr. Sanjay Kumar",
+        date: "2026-06-17",
+        views: 145000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>A team of researchers from AIIMS Delhi and IIT Bombay has developed a revolutionary nanotechnology-based drug delivery system that promises to transform cancer treatment. The new approach reduces chemotherapy side effects by up to 80% while improving treatment efficacy.</p>
+        <h3>Targeted Drug Delivery</h3>
+        <p>The system uses specially designed nanoparticles that can identify and attach only to cancer cells, releasing the drug payload directly at the tumor site. This minimizes damage to healthy tissues, which is the primary cause of chemotherapy side effects.</p>
+        <blockquote>"This technology could make chemotherapy as routine as taking antibiotics. The reduction in side effects means patients can maintain their quality of life during treatment," said Dr. Rajesh Gokhale, lead researcher at IIT Bombay.</blockquote>
+        <p>Clinical trials have shown promising results in treating breast and lung cancers. The team is now working with pharmaceutical companies to make the treatment available within the next two years at an affordable cost.</p>`
+    },
+    {
+        id: 9,
+        title: "Bollywood's 'Bharat' Becomes Highest-Grossing Indian Film Globally",
+        excerpt: "The epic historical drama crosses Rs 2,000 crore worldwide, setting new benchmarks for Indian cinema on the global stage.",
+        category: "entertainment",
+        image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800&q=80",
+        author: "Karan Johar",
+        date: "2026-06-17",
+        views: 267000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Indian film industry has achieved a historic milestone with 'Bharat,' an epic historical drama directed by SS Rajamouli, becoming the highest-grossing Indian film globally. The movie has crossed the Rs 2,000 crore mark at the worldwide box office.</p>
+        <h3>A Global Phenomenon</h3>
+        <p>'Bharat' has not only dominated the Indian box office but has also found significant audiences in North America, Europe, and East Asia. The film's universal themes of courage and sacrifice have resonated with viewers across cultural boundaries.</p>
+        <blockquote>"This success proves that Indian stories have global appeal. We don't need to imitate Hollywood; our own narratives are powerful enough," said SS Rajamouli at a press conference in Mumbai.</blockquote>
+        <p>The film stars a pan-Indian cast including actors from Bollywood, Tollywood, and Kollywood, symbolizing the unity of Indian cinema. Trade analysts predict the film could reach Rs 2,500 crore before its theatrical run ends.</p>`
+    },
+    {
+        id: 10,
+        title: "India's Digital Payment Revolution: UPI Crosses 20 Billion Monthly Transactions",
+        excerpt: "The Unified Payments Interface achieves a historic milestone, cementing India's position as the global leader in digital payments innovation.",
+        category: "technology",
+        image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80",
+        author: "Nandan Nilekani",
+        date: "2026-06-16",
+        views: 198000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>India's Unified Payments Interface (UPI) has achieved a remarkable milestone, processing over 20 billion transactions in a single month for the first time. The total value of transactions exceeded Rs 35 lakh crore, demonstrating the massive scale of India's digital payment ecosystem.</p>
+        <h3>A Global Model for Digital Payments</h3>
+        <p>UPI's success has attracted attention from over 30 countries that are now exploring similar real-time payment systems. The NPCI has signed agreements to export UPI technology to nations in Asia, Africa, and South America.</p>
+        <blockquote>"UPI is India's gift to the world's digital economy. It has democratized financial access in ways that were unimaginable a decade ago," said Dilip Asbe, MD & CEO of NPCI.</blockquote>
+        <p>The platform now supports payments in 15 international currencies and has been integrated with payment systems in Singapore, UAE, France, and several other countries.</p>`
+    },
+    {
+        id: 11,
+        title: "Heatwave Claims Lives Across North India: IMD Issues Red Alert",
+        excerpt: "Severe heatwave conditions persist across Rajasthan, Delhi, and Uttar Pradesh with temperatures crossing 48C. Authorities urge citizens to stay indoors.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1504370805625-d32c54b16100?w=800&q=80",
+        author: "Meera Singh",
+        date: "2026-06-16",
+        views: 312000,
+        readTime: "3 min",
+        sentiment: "negative",
+        mood: "serious",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>A severe heatwave continues to grip northern India, with temperatures in several parts of Rajasthan and Delhi crossing 48 degrees Celsius. The India Meteorological Department has issued a red alert for the region, warning that the extreme conditions may persist for another 48 hours.</p>
+        <h3>Health Emergency Declared</h3>
+        <p>Several state governments have declared health emergencies, with hospitals reporting a surge in heatstroke cases. Schools and colleges have been closed, and outdoor construction work has been banned during peak hours.</p>
+        <blockquote>"This is one of the most severe heatwaves we've recorded in the past decade. Citizens must take all precautions and stay hydrated," said IMD scientist Dr. Naresh Kumar.</blockquote>
+        <p>Climate experts attribute the increasing frequency of such extreme events to global warming, urging immediate action on climate adaptation strategies for vulnerable regions.</p>`
+    },
+    {
+        id: 12,
+        title: "Indian Railways Unveils World's Fastest Train: Vande Bharat Express 2.0",
+        excerpt: "The new semi-high-speed train reaches 220 km/h during trials, connecting Delhi to Mumbai in just 8 hours with cutting-edge indigenous technology.",
+        category: "technology",
+        image: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=800&q=80",
+        author: "Suresh Prabhu",
+        date: "2026-06-15",
+        views: 178000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>Indian Railways has unveiled the Vande Bharat Express 2.0, the world's fastest semi-high-speed train with a top speed of 220 km/h. During successful trial runs between Delhi and Mumbai, the train completed the journey in just 8 hours, half the time of conventional trains.</p>
+        <h3>Indigenous Technology Marvel</h3>
+        <p>The train is entirely designed and manufactured in India, featuring aerodynamic design, regenerative braking, and advanced passenger amenities. Each coach costs Rs 25 crore and is built at the Integral Coach Factory in Chennai.</p>
+        <blockquote>"This is a testament to India's engineering prowess. We've created a world-class product at a fraction of the cost of imported technology," said Railway Minister Ashwini Vaishnaw.</blockquote>
+        <p>The government plans to deploy 500 such trains across the country by 2030, transforming inter-city travel in India. The project is expected to reduce carbon emissions by 2 million tonnes annually.</p>`
+    },
+    {
+        id: 13,
+        title: "Indian Army Conducts Joint Military Exercise with US Forces in Rajasthan",
+        excerpt: "The Yudh Abhyas 2026 exercise focuses on counter-terrorism operations and humanitarian assistance in desert warfare conditions.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=800&q=80",
+        author: "Col. Rajesh Verma",
+        date: "2026-06-15",
+        views: 89000,
+        readTime: "4 min",
+        sentiment: "neutral",
+        mood: "neutral",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Indian and US armies have commenced the Yudh Abhyas 2026 joint military exercise at the Mahajan Field Firing Range in Rajasthan. The annual exercise, now in its 20th edition, focuses on enhancing interoperability between the two forces.</p>
+        <h3>Desert Warfare Training</h3>
+        <p>Over 3,000 troops from both nations are participating in drills that simulate counter-terrorism operations, humanitarian assistance, and disaster relief in desert conditions. The exercise includes live-fire drills, airborne operations, and medical evacuation scenarios.</p>
+        <blockquote>"These exercises strengthen our strategic partnership and ensure our forces can operate seamlessly together when needed," said US Army Pacific Commander General Charles Flynn.</blockquote>
+        <p>The exercise comes amid growing defense cooperation between India and the United States, which has seen significant arms deals and technology sharing agreements in recent years.</p>`
+    },
+    {
+        id: 14,
+        title: "Indian EdTech Startup Byju's Files for IPO, Valued at Rs 85,000 Crore",
+        excerpt: "The Bengaluru-based education technology giant plans to raise Rs 15,000 crore through its initial public offering on the Bombay Stock Exchange.",
+        category: "business",
+        image: "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&q=80",
+        author: "Rohit Sharma",
+        date: "2026-06-14",
+        views: 134000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>Byju's, India's largest ed-tech company, has filed its draft red herring prospectus with SEBI for an initial public offering that could value the company at Rs 85,000 crore. The IPO is expected to raise Rs 15,000 crore, making it one of the largest public offerings in India's technology sector.</p>
+        <h3>From Local Tutoring to Global Platform</h3>
+        <p>Founded by Byju Raveendran in 2011 as an offline tutoring service, the company has transformed into a global education platform serving over 150 million students across 120 countries. The platform offers personalized learning programs for students from kindergarten to professional competitive exams.</p>
+        <blockquote>"This IPO marks the next phase of our journey to make quality education accessible to every child on the planet," said Byju Raveendran, founder and CEO.</blockquote>
+        <p>Despite regulatory challenges in the ed-tech sector, Byju's strong revenue growth and expanding international presence have attracted significant investor interest. The company reported revenues of Rs 14,000 crore in FY2025.</p>`
+    },
+    {
+        id: 15,
+        title: "Supreme Court Ruling: Right to Internet Declared Fundamental Right",
+        excerpt: "In a landmark judgment, the Supreme Court of India rules that access to the internet is a fundamental right under Article 21 of the Constitution.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80",
+        author: "Justice D.Y. Chandrachud",
+        date: "2026-06-14",
+        views: 223000,
+        readTime: "6 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Supreme Court of India has delivered a historic judgment declaring access to the internet as a fundamental right under Article 21 of the Constitution, which guarantees the right to life and personal liberty. The ruling has far-reaching implications for digital governance in the country.</p>
+        <h3>A Watershed Moment for Digital Rights</h3>
+        <p>The five-judge bench, led by Chief Justice D.Y. Chandrachud, ruled that in the modern era, the internet is essential for exercising other fundamental rights, including freedom of speech, education, and livelihood. The judgment mandates that any internet shutdown must pass a strict proportionality test.</p>
+        <blockquote>"The internet is not a luxury but a necessity. Its denial affects the fundamental right to life with dignity," the judgment stated.</blockquote>
+        <p>The ruling comes in response to numerous petitions challenging internet shutdowns imposed by various state governments. The court has directed the government to formulate a comprehensive framework for internet governance that balances security concerns with digital rights.</p>`
+    },
+    {
+        id: 16,
+        title: "India Becomes World's Third-Largest Automobile Market, Surpassing Japan",
+        excerpt: "Annual vehicle sales in India cross 5 million units for the first time, driven by strong demand for SUVs and electric vehicles.",
+        category: "business",
+        image: "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80",
+        author: "Pawan Goenka",
+        date: "2026-06-13",
+        views: 167000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>India has officially overtaken Japan to become the world's third-largest automobile market, with annual vehicle sales crossing 5 million units for the first time in the country's history. The milestone reflects India's growing economic prosperity and the expanding middle class.</p>
+        <h3>Electric Vehicles Lead Growth</h3>
+        <p>Electric vehicle sales have been the primary growth driver, increasing by 85% year-over-year. Government incentives under the FAME III scheme, combined with state-level subsidies, have made EVs increasingly affordable for Indian consumers.</p>
+        <blockquote>"India's automotive industry is at an inflection point. We're not just growing; we're leading the global transition to sustainable mobility," said Rajesh Menon, Director General of SIAM.</blockquote>
+        <p>SUVs continue to dominate sales, accounting for 52% of all passenger vehicles sold. Domestic manufacturers like Tata Motors and Mahindra have gained significant market share at the expense of international brands.</p>`
+    },
+    {
+        id: 17,
+        title: "Indian Ocean Tsunami Warning System Upgraded with AI Prediction",
+        excerpt: "The new system developed by INCOIS can predict tsunamis 45 minutes before impact, potentially saving millions of lives in coastal regions.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=800&q=80",
+        author: "Dr. Srinivas Kumar",
+        date: "2026-06-13",
+        views: 112000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Indian National Centre for Ocean Information Services (INCOIS) has unveiled a next-generation tsunami warning system that uses artificial intelligence to predict tsunami events up to 45 minutes before impact. The system represents a significant improvement over the current 15-minute warning window.</p>
+        <h3>AI-Powered Early Warning</h3>
+        <p>The system analyzes real-time data from ocean-bottom sensors, GPS stations, and satellite imagery using machine learning algorithms trained on historical tsunami data. It can accurately predict wave height, arrival time, and impact zones.</p>
+        <blockquote>"This 45-minute window could mean the difference between life and death for millions of people living in coastal areas," said Dr. Prakash Chauhan, Director of INCOIS.</blockquote>
+        <p>The technology has been shared with 28 Indian Ocean rim countries under the United Nations' early warning framework. The system will be fully operational by the end of 2026.</p>`
+    },
+    {
+        id: 18,
+        title: "Indian Women's Cricket Team Wins T20 World Cup",
+        excerpt: "India defeats Australia by 8 wickets in the final at Lord's, bringing home the coveted trophy for the first time in history.",
+        category: "sports",
+        image: "https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=800&q=80",
+        author: "Mithali Raj",
+        date: "2026-06-12",
+        views: 298000,
+        readTime: "6 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Indian women's cricket team has created history by winning the ICC Women's T20 World Cup, defeating defending champions Australia by 8 wickets in a dominant final at Lord's Cricket Ground in London. This marks India's first-ever T20 World Cup victory in women's cricket.</p>
+        <h3>A Historic Victory</h3>
+        <p>Captain Harmanpreet Kaur led from the front with an unbeaten 78, while young opener Shafali Verma provided a blistering start with 45 off 28 balls. The bowlers restricted Australia to 142, which India chased down with 3 overs to spare.</p>
+        <blockquote>"This is for every girl in India who dreams of playing cricket. We've shown that with belief and hard work, anything is possible," said an emotional Harmanpreet Kaur after lifting the trophy.</blockquote>
+        <p>The victory has sparked nationwide celebrations and is expected to give a massive boost to women's cricket in India. The BCCI has announced a Rs 50 crore reward for the team and plans to expand the Women's Premier League.</p>`
+    },
+    {
+        id: 19,
+        title: "India's Renewable Energy Capacity Crosses 250 GW Mark",
+        excerpt: "Solar and wind power installations reach record levels as India moves closer to its 500 GW non-fossil fuel target by 2030.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1509391366360-2e959784a276?w=800&q=80",
+        author: "R.K. Singh",
+        date: "2026-06-12",
+        views: 143000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>India's installed renewable energy capacity has crossed the 250 GW milestone, with solar power contributing over 100 GW and wind power adding another 85 GW. The achievement puts India well on track to meet its target of 500 GW non-fossil fuel capacity by 2030.</p>
+        <h3>Solar Power Surge</h3>
+        <p>The solar sector has been the standout performer, with installations growing by 35% year-over-year. The government's Production Linked Incentive (PLI) scheme for solar module manufacturing has attracted investments worth Rs 30,000 crore, reducing dependence on Chinese imports.</p>
+        <blockquote>"India is demonstrating that economic growth and environmental sustainability can go hand in hand. Our renewable energy sector is a model for developing nations," said Union Minister R.K. Singh.</blockquote>
+        <p>The government has also announced plans for 10 GW of offshore wind projects along the Gujarat and Tamil Nadu coasts, which could position India as a global leader in offshore wind energy.</p>`
+    },
+    {
+        id: 20,
+        title: "Mumbai-Delhi Bullet Train Project: 50% Construction Complete",
+        excerpt: "The National High Speed Rail Corporation announces that the ambitious Mumbai-Ahmedabad bullet train corridor is halfway to completion, with trials expected by 2028.",
+        category: "technology",
+        image: "https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80",
+        author: "Ashwini Vaishnaw",
+        date: "2026-06-11",
+        views: 187000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The National High Speed Rail Corporation (NHSRCL) has announced that the Mumbai-Ahmedabad High Speed Rail project has reached the 50% completion mark. The Rs 1.1 lakh crore project, India's first bullet train corridor, is now on track for commissioning by 2028.</p>
+        <h3>Engineering Marvel Taking Shape</h3>
+        <p>The 508-km corridor features 12 stations and includes India's longest railway tunnel (21 km) under the sea near Thane. The project employs Japanese Shinkansen technology, capable of speeds up to 320 km/h, which will reduce the Mumbai-Ahmedabad travel time from 7 hours to just 2 hours.</p>
+        <blockquote>"This project represents the future of Indian transportation. We're building infrastructure that will serve generations," said Railway Minister Ashwini Vaishnaw during an inspection visit.</blockquote>
+        <p>The project has generated over 90,000 jobs during construction and is expected to create 3,50,000 indirect employment opportunities once operational. Land acquisition for the entire corridor has been completed.</p>`
+    },
+    {
+        id: 21,
+        title: "India's New Education Policy Shows Results: Literacy Rate Crosses 85%",
+        excerpt: "The National Education Policy 2020 begins to show tangible results as India's literacy rate reaches its highest level ever, with significant gains in rural areas.",
+        category: "world",
+        image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=800&q=80",
+        author: "Dharmendra Pradhan",
+        date: "2026-06-11",
+        views: 156000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>India's literacy rate has crossed 85% for the first time, according to the latest National Sample Survey. The milestone is being attributed to the successful implementation of the National Education Policy 2020, which introduced structural reforms in the country's education system.</p>
+        <h3>Rural-Urban Gap Narrows</h3>
+        <p>The most significant improvement has been in rural areas, where literacy rates have jumped by 8 percentage points in the past five years. Female literacy has seen the most dramatic improvement, reaching 82% nationally.</p>
+        <blockquote>"Education is the most powerful tool for social transformation. These numbers validate our belief that every child in India deserves quality education," said Union Education Minister Dharmendra Pradhan.</blockquote>
+        <p>The government has credited the 'Padhe India, Badhe India' campaign and the expansion of digital learning infrastructure for the improvement. Over 2 lakh new schools have been built in rural areas since 2020.</p>`
+    },
+    {
+        id: 22,
+        title: "Indian Pharma Company Develops Affordable Malaria Vaccine",
+        excerpt: "Serum Institute of India announces a breakthrough malaria vaccine priced at just Rs 250 per dose, making it accessible to millions in Africa and Asia.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1585435557343-3b092031a831?w=800&q=80",
+        author: "Adar Poonawalla",
+        date: "2026-06-10",
+        views: 201000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Serum Institute of India has announced the development of a groundbreaking malaria vaccine that will be priced at just Rs 250 per dose, making it the most affordable malaria vaccine in the world. The vaccine, developed in partnership with Oxford University, has shown 80% efficacy in phase-3 trials.</p>
+        <h3>A Lifeline for Developing Nations</h3>
+        <p>Malaria remains one of the deadliest diseases in sub-Saharan Africa and parts of South Asia, killing over 600,000 people annually, mostly children under five. The new vaccine could save millions of lives by providing affordable protection.</p>
+        <blockquote>"Our goal is to make this vaccine as accessible as possible. No child should die of malaria because they can't afford the vaccine," said Adar Poonawalla, CEO of Serum Institute of India.</blockquote>
+        <p>The company has committed to producing 100 million doses annually, with the first batches expected to reach African nations by early 2027. The Bill & Melinda Gates Foundation has pledged $200 million to support distribution efforts.</p>`
+    },
+    {
+        id: 23,
+        title: "India's Tourism Sector Booms: Foreign Arrivals Cross 15 Million",
+        excerpt: "The 'Incredible India 2.0' campaign drives record tourist numbers, with foreign exchange earnings from tourism crossing Rs 3 lakh crore.",
+        category: "entertainment",
+        image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&q=80",
+        author: "G. Kishan Reddy",
+        date: "2026-06-10",
+        views: 134000,
+        readTime: "4 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>India's tourism sector has achieved a historic milestone, with foreign tourist arrivals crossing 15 million for the first time. The 'Incredible India 2.0' campaign, launched in 2024, has successfully repositioned India as a must-visit destination for global travelers.</p>
+        <h3>Record Foreign Exchange Earnings</h3>
+        <p>Foreign exchange earnings from tourism have crossed Rs 3 lakh crore, contributing significantly to India's economy. The sector now employs over 9 crore people directly and indirectly, making it one of the largest employment generators.</p>
+        <blockquote>"Tourism is not just about foreign exchange; it's about showcasing India's rich cultural heritage to the world. Our visitors become ambassadors of our culture," said Tourism Minister G. Kishan Reddy.</blockquote>
+        <p>Medical tourism and spiritual tourism have been the fastest-growing segments, with cities like Varanasi, Rishikesh, and Kochi emerging as global wellness destinations. The government has simplified visa procedures for tourists from 50 countries.</p>`
+    },
+    {
+        id: 24,
+        title: "Cyber Attack on Indian Banking System: RBI Assures No Data Breach",
+        excerpt: "A coordinated cyber attack targeted multiple public sector banks, but the RBI confirms that customer data and funds remain secure.",
+        category: "technology",
+        image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
+        author: "Ritesh Baweja",
+        date: "2026-06-09",
+        views: 267000,
+        readTime: "4 min",
+        sentiment: "negative",
+        mood: "serious",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>A sophisticated cyber attack targeted the digital infrastructure of several Indian public sector banks, causing temporary disruption to online banking services. However, the Reserve Bank of India has confirmed that no customer data was compromised and all funds remain secure.</p>
+        <h3>Rapid Response Contained Threat</h3>
+        <p>The Indian Computer Emergency Response Team (CERT-In) detected the attack within minutes and initiated protocols to isolate affected systems. The attack, believed to originate from a state-sponsored actor, was contained before any data exfiltration could occur.</p>
+        <blockquote>"Our banking infrastructure is robust. We have multiple layers of security, and this incident has only strengthened our resolve to enhance cyber defenses," said RBI Deputy Governor T. Rabi Sankar.</blockquote>
+        <p>The incident has prompted the government to announce a Rs 5,000 crore cybersecurity enhancement program for the banking sector, including AI-powered threat detection systems and mandatory security audits.</p>`
+    },
+    {
+        id: 25,
+        title: "India's Mars Orbiter Mission 2: Mangalyaan-2 Launch Scheduled for 2027",
+        excerpt: "ISRO announces the second Mars mission will include a rover and helicopter, significantly expanding India's planetary exploration capabilities.",
+        category: "science",
+        image: "https://images.unsplash.com/photo-1614728853913-1e22ba0e9827?w=800&q=80",
+        author: "Dr. S. Somanath",
+        date: "2026-06-09",
+        views: 189000,
+        readTime: "5 min",
+        sentiment: "positive",
+        mood: "positive",
+        country: "india",
+        featured: false,
+        hero: false,
+        content: `<p>The Indian Space Research Organisation has officially announced the launch schedule for Mangalyaan-2, India's second mission to Mars. Scheduled for launch in late 2027, the mission will significantly expand upon the achievements of the original Mangalyaan mission by including a rover and a helicopter drone.</p>
+        <h3>Next-Generation Planetary Exploration</h3>
+        <p>The Rs 1,000 crore mission will carry 14 scientific instruments designed to study Mars' atmosphere, surface geology, and potential biosignatures. The rover, named 'Pragyan-2,' will be capable of traversing 500 meters on the Martian surface.</p>
+        <blockquote>"Mangalyaan-2 represents India's maturing space program. We're moving from orbiters to surface missions, which is a quantum leap in capability," said ISRO Chairman Dr. S. Somanath.</blockquote>
+        <p>The mission will also test technologies crucial for India's planned Venus mission and future human spaceflight program. International partners from France, Germany, and the United States have contributed instruments to the mission.</p>`
+    }
+];
 
-    <script src="js/app.js"></script>
+// ==================== STATE MANAGEMENT ====================
+let currentCategory = 'all';
+let currentMood = null;
+let currentCountry = null;
+let currentView = 'grid';
+let currentSort = 'newest';
+let bookmarks = JSON.parse(localStorage.getItem('newshub_bookmarks') || '[]');
+let displayedCount = 6;
+let currentArticle = null;
+let speechSynthesis = window.speechSynthesis;
+let currentUtterance = null;
+
+// ==================== INITIALIZATION ====================
+document.addEventListener('DOMContentLoaded', function() {
+    renderFeatured();
+    renderNews();
+    updateBookmarkCount();
+    setupMapInteractions();
+});
+
+// ==================== RENDER FUNCTIONS ====================
+function renderFeatured() {
+    const featuredGrid = document.getElementById('featuredGrid');
+    const heroArticle = newsArticles.find(a => a.hero);
+    const sideArticles = newsArticles.filter(a => a.featured && !a.hero).slice(0, 2);
+
+    if (!heroArticle) return;
+
+    featuredGrid.innerHTML = `
+        <div class="hero-card" onclick="openArticle(${heroArticle.id})">
+            <img src="${heroArticle.image}" alt="${heroArticle.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'">
+            <div class="hero-overlay">
+                <span class="hero-category">${heroArticle.category}</span>
+                <h2 class="hero-title">${heroArticle.title}</h2>
+                <div class="hero-meta">
+                    <span><i class="fas fa-user"></i> ${heroArticle.author}</span>
+                    <span><i class="fas fa-clock"></i> ${heroArticle.date}</span>
+                    <span><i class="fas fa-eye"></i> ${formatNumber(heroArticle.views)}</span>
+                </div>
+            </div>
+        </div>
+        <div class="side-cards">
+            ${sideArticles.map(article => `
+                <div class="side-card" onclick="openArticle(${article.id})">
+                    <img src="${article.image}" alt="${article.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'">
+                    <div class="side-card-content">
+                        <span class="side-card-category">${article.category}</span>
+                        <h3 class="side-card-title">${article.title}</h3>
+                        <div class="side-card-meta">
+                            <span><i class="fas fa-clock"></i> ${article.date}</span>
+                            <span><i class="fas fa-eye"></i> ${formatNumber(article.views)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function renderNews() {
+    const newsGrid = document.getElementById('newsGrid');
+    let filtered = newsArticles.filter(a => !a.hero);
+
+    if (currentCategory !== 'all') {
+        filtered = filtered.filter(a => a.category === currentCategory);
+    }
+
+    if (currentMood) {
+        filtered = filtered.filter(a => a.mood === currentMood);
+    }
+
+    if (currentCountry) {
+        filtered = filtered.filter(a => a.country === currentCountry);
+    }
+
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    if (searchTerm) {
+        filtered = filtered.filter(a => 
+            a.title.toLowerCase().includes(searchTerm) || 
+            a.excerpt.toLowerCase().includes(searchTerm) ||
+            a.category.toLowerCase().includes(searchTerm)
+        );
+    }
+
+    if (currentSort === 'newest') {
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } else if (currentSort === 'oldest') {
+        filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+    } else if (currentSort === 'popular') {
+        filtered.sort((a, b) => b.views - a.views);
+    }
+
+    const displayArticles = filtered.slice(0, displayedCount);
+
+    if (displayArticles.length === 0) {
+        newsGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-secondary);">
+                <i class="fas fa-newspaper" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                <p>No articles found matching your criteria.</p>
+            </div>
+        `;
+        return;
+    }
+
+    newsGrid.innerHTML = displayArticles.map(article => {
+        const isBookmarked = bookmarks.includes(article.id);
+        const sentimentClass = article.sentiment === 'positive' ? 'sentiment-positive' : 
+                              article.sentiment === 'negative' ? 'sentiment-negative' : 'sentiment-neutral';
+        const sentimentText = article.sentiment === 'positive' ? 'Positive' : 
+                             article.sentiment === 'negative' ? 'Negative' : 'Neutral';
+
+        return `
+            <div class="news-card" onclick="openArticle(${article.id})">
+                <img src="${article.image}" alt="${article.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'">
+                <div class="news-card-content">
+                    <div class="news-card-header">
+                        <span class="news-category">${article.category}</span>
+                        <button class="bookmark-btn ${isBookmarked ? 'active' : ''}" onclick="event.stopPropagation(); toggleBookmark(${article.id})" title="${isBookmarked ? 'Remove bookmark' : 'Add bookmark'}">
+                            <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i>
+                        </button>
+                    </div>
+                    <h3 class="news-title">${article.title}</h3>
+                    <p class="news-excerpt">${article.excerpt}</p>
+                    <div class="news-footer">
+                        <div class="news-meta">
+                            <span><i class="fas fa-clock"></i> ${article.date}</span>
+                            <span><i class="fas fa-eye"></i> ${formatNumber(article.views)}</span>
+                            <span><i class="fas fa-book-open"></i> ${article.readTime}</span>
+                        </div>
+                        <span class="sentiment-badge ${sentimentClass}">${sentimentText}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    const loadMoreBtn = document.querySelector('.load-more-btn');
+    if (loadMoreBtn) {
+        if (displayedCount >= filtered.length) {
+            loadMoreBtn.style.display = 'none';
+        } else {
+            loadMoreBtn.style.display = 'inline-block';
+            loadMoreBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="display: none;"></i> Load More Articles';
+        }
+    }
+}
+
+function filterCategory(category, element) {
+    currentCategory = category;
+    displayedCount = 6;
+
+    document.querySelectorAll('.nav a').forEach(link => link.classList.remove('active'));
+    if (element) element.classList.add('active');
+    else {
+        const navLink = document.querySelector(`.nav a[data-category="${category}"]`);
+        if (navLink) navLink.classList.add('active');
+    }
+
+    const latestTitle = document.getElementById('latestTitle');
+    if (latestTitle) {
+        latestTitle.innerHTML = `<i class="fas fa-clock"></i> ${category === 'all' ? 'Latest News' : category.charAt(0).toUpperCase() + category.slice(1)} News`;
+    }
+
+    renderNews();
+}
+
+function filterByMood(mood) {
+    if (currentMood === mood) {
+        currentMood = null;
+        document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('active'));
+    } else {
+        currentMood = mood;
+        document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('mood' + mood.charAt(0).toUpperCase() + mood.slice(1)).classList.add('active');
+    }
+    displayedCount = 6;
+    renderNews();
+}
+
+function performSearch() {
+    displayedCount = 6;
+    renderNews();
+}
+
+function sortNews() {
+    currentSort = document.getElementById('sortSelect').value;
+    renderNews();
+}
+
+function setView(view) {
+    currentView = view;
+    const newsGrid = document.getElementById('newsGrid');
+    const viewButtons = document.querySelectorAll('.view-toggle .control-btn');
+
+    if (view === 'list') {
+        newsGrid.classList.add('list-view');
+        viewButtons[0].classList.remove('active');
+        viewButtons[1].classList.add('active');
+    } else {
+        newsGrid.classList.remove('list-view');
+        viewButtons[0].classList.add('active');
+        viewButtons[1].classList.remove('active');
+    }
+}
+
+function toggleView() {
+    const newView = currentView === 'grid' ? 'list' : 'grid';
+    setView(newView);
+    const icon = document.getElementById('viewIcon');
+    if (icon) icon.className = newView === 'grid' ? 'fas fa-list' : 'fas fa-th-large';
+}
+
+function loadMore() {
+    const btn = document.querySelector('.load-more-btn');
+    const spinner = btn.querySelector('.fa-spinner');
+    spinner.style.display = 'inline-block';
+
+    setTimeout(() => {
+        displayedCount += 6;
+        renderNews();
+        spinner.style.display = 'none';
+    }, 500);
+}
+
+function resetHome() {
+    currentCategory = 'all';
+    currentMood = null;
+    currentCountry = null;
+    displayedCount = 6;
+    document.getElementById('searchInput').value = '';
+    document.querySelectorAll('.mood-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.nav a').forEach(link => link.classList.remove('active'));
+    document.querySelector('.nav a[data-category="all"]').classList.add('active');
+    document.getElementById('latestTitle').innerHTML = '<i class="fas fa-clock"></i> Latest News';
+    document.querySelectorAll('.map-country').forEach(c => c.classList.remove('active'));
+    renderNews();
+}
+
+function setupMapInteractions() {
+    const countries = document.querySelectorAll('.map-country');
+    const tooltip = document.getElementById('mapTooltip');
+    const container = document.getElementById('mapContainer');
+
+    const countryNames = {
+        'canada': 'Canada', 'usa': 'United States', 'brazil': 'Brazil',
+        'uk': 'United Kingdom', 'france': 'France', 'germany': 'Germany',
+        'russia': 'Russia', 'china': 'China', 'india': 'India',
+        'japan': 'Japan', 'egypt': 'Egypt', 'southafrica': 'South Africa',
+        'australia': 'Australia'
+    };
+
+    countries.forEach(country => {
+        country.addEventListener('mouseenter', (e) => {
+            const name = countryNames[country.dataset.country] || country.dataset.country;
+            tooltip.textContent = name;
+            tooltip.classList.add('show');
+        });
+
+        country.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            tooltip.style.left = (e.clientX - rect.left + 10) + 'px';
+            tooltip.style.top = (e.clientY - rect.top - 30) + 'px';
+        });
+
+        country.addEventListener('mouseleave', () => {
+            tooltip.classList.remove('show');
+        });
+
+        country.addEventListener('click', () => {
+            countries.forEach(c => c.classList.remove('active'));
+            country.classList.add('active');
+            currentCountry = country.dataset.country === 'india' ? 'india' : null;
+            if (currentCountry) {
+                filterCategory('all');
+                renderNews();
+                showToast('Showing news from India', 'info');
+            } else {
+                showToast('News from ' + countryNames[country.dataset.country] + ' coming soon!', 'info');
+            }
+        });
+    });
+}
+
+function openArticle(id) {
+    const article = newsArticles.find(a => a.id === id);
+    if (!article) return;
+
+    currentArticle = article;
+
+    document.getElementById('modalImage').src = article.image;
+    document.getElementById('modalImage').alt = article.title;
+    document.getElementById('modalCategory').textContent = article.category;
+    document.getElementById('modalTitle').textContent = article.title;
+    document.getElementById('modalAuthor').textContent = article.author;
+    document.getElementById('modalDate').textContent = article.date;
+    document.getElementById('modalViews').textContent = formatNumber(article.views) + ' views';
+    document.getElementById('modalReadTime').textContent = article.readTime;
+    document.getElementById('modalContent').innerHTML = article.content;
+
+    const sentimentEl = document.getElementById('modalSentiment');
+    const sentimentClass = article.sentiment === 'positive' ? 'positive' : 
+                          article.sentiment === 'negative' ? 'negative' : 'neutral';
+    const sentimentText = article.sentiment === 'positive' ? 'Positive' : 
+                         article.sentiment === 'negative' ? 'Negative' : 'Neutral';
+    const sentimentIcon = article.sentiment === 'positive' ? 'fa-smile' : 
+                         article.sentiment === 'negative' ? 'fa-frown' : 'fa-meh';
+    sentimentEl.innerHTML = `<span class="sentiment-indicator ${sentimentClass}"><i class="fas ${sentimentIcon}"></i> ${sentimentText} Sentiment</span>`;
+
+    const bookmarkBtn = document.getElementById('modalBookmarkBtn');
+    const isBookmarked = bookmarks.includes(article.id);
+    bookmarkBtn.innerHTML = `<i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i> ${isBookmarked ? 'Bookmarked' : 'Bookmark'}`;
+
+    document.getElementById('aiSummaryContent').classList.remove('show');
+    document.getElementById('aiSummaryBtn').disabled = false;
+    document.getElementById('aiSummaryBtn').innerHTML = '<i class="fas fa-magic"></i> Summarize in 30 Seconds';
+
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('articleModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+    document.getElementById('articleModal').classList.remove('active');
+    document.body.style.overflow = '';
+
+    if (speechSynthesis) speechSynthesis.cancel();
+    const ttsBtn = document.getElementById('ttsBtn');
+    if (ttsBtn) {
+        ttsBtn.classList.remove('playing');
+        ttsBtn.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
+    }
+
+    currentArticle = null;
+    currentUtterance = null;
+}
+
+function generateAISummary() {
+    const btn = document.getElementById('aiSummaryBtn');
+    const content = document.getElementById('aiSummaryContent');
+
+    if (!currentArticle) return;
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
+
+    setTimeout(() => {
+        const summary = generateSummary(currentArticle);
+        content.innerHTML = summary;
+        content.classList.add('show');
+        btn.innerHTML = '<i class="fas fa-check"></i> Summary Generated';
+    }, 1500);
+}
+
+function generateSummary(article) {
+    const keyPoints = article.excerpt.split('.').slice(0, 3).map(s => s.trim()).filter(s => s.length > 10);
+
+    return `
+        <div class="ai-summary-box">
+            <h4><i class="fas fa-key"></i> Key Points</h4>
+            <ul>
+                ${keyPoints.map(point => `<li>${point}</li>`).join('')}
+                <li>Published on ${article.date} by ${article.author}</li>
+                <li>Category: ${article.category.charAt(0).toUpperCase() + article.category.slice(1)}</li>
+            </ul>
+        </div>
+        <div class="ai-summary-box">
+            <h4><i class="fas fa-balance-scale"></i> Sentiment Analysis</h4>
+            <p>This article has a <strong>${article.sentiment}</strong> tone. The overall sentiment is ${article.sentiment === 'positive' ? 'optimistic and highlights progress or success' : article.sentiment === 'negative' ? 'concerning and requires attention' : 'balanced and presents facts objectively'}.</p>
+        </div>
+        <div class="ai-summary-box">
+            <h4><i class="fas fa-clock"></i> Reading Time</h4>
+            <p>Estimated reading time: <strong>${article.readTime}</strong>. The article contains approximately ${Math.floor(article.content.length / 5)} words.</p>
+        </div>
+    `;
+}
+
+function toggleBookmark(id) {
+    const index = bookmarks.indexOf(id);
+    if (index > -1) {
+        bookmarks.splice(index, 1);
+        showToast('Article removed from bookmarks', 'info');
+    } else {
+        bookmarks.push(id);
+        showToast('Article bookmarked!', 'success');
+    }
+    localStorage.setItem('newshub_bookmarks', JSON.stringify(bookmarks));
+    updateBookmarkCount();
+    renderNews();
+    renderBookmarksList();
+}
+
+function toggleModalBookmark() {
+    if (!currentArticle) return;
+    toggleBookmark(currentArticle.id);
+    const bookmarkBtn = document.getElementById('modalBookmarkBtn');
+    const isBookmarked = bookmarks.includes(currentArticle.id);
+    bookmarkBtn.innerHTML = `<i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i> ${isBookmarked ? 'Bookmarked' : 'Bookmark'}`;
+}
+
+function updateBookmarkCount() {
+    const count = document.getElementById('bookmarkCount');
+    if (bookmarks.length > 0) {
+        count.textContent = bookmarks.length;
+        count.style.display = 'flex';
+    } else {
+        count.style.display = 'none';
+    }
+}
+
+function toggleBookmarks() {
+    const sidebar = document.getElementById('bookmarksSidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('active');
+    renderBookmarksList();
+}
+
+function renderBookmarksList() {
+    const list = document.getElementById('bookmarksList');
+    if (bookmarks.length === 0) {
+        list.innerHTML = `
+            <div class="empty-bookmarks">
+                <i class="fas fa-bookmark"></i>
+                <p>No bookmarks yet. Click the bookmark icon on any article to save it!</p>
+            </div>
+        `;
+        return;
+    }
+
+    const bookmarkedArticles = newsArticles.filter(a => bookmarks.includes(a.id));
+    list.innerHTML = bookmarkedArticles.map(article => `
+        <div class="bookmark-item" onclick="openArticle(${article.id}); toggleBookmarks();">
+            <img src="${article.image}" alt="${article.title}" onerror="this.src='https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'">
+            <div class="bookmark-info">
+                <h4>${article.title}</h4>
+                <p>${article.category} &middot; ${article.date}</p>
+            </div>
+            <button class="remove-bookmark" onclick="event.stopPropagation(); toggleBookmark(${article.id})">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+    `).join('');
+}
+
+function toggleTTS() {
+    const btn = document.getElementById('ttsBtn');
+
+    if (!currentArticle) return;
+
+    if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+        btn.classList.remove('playing');
+        btn.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
+        return;
+    }
+
+    const text = currentArticle.title + '. ' + currentArticle.excerpt;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+
+    utterance.onend = () => {
+        btn.classList.remove('playing');
+        btn.innerHTML = '<i class="fas fa-volume-up"></i> Listen';
+    };
+
+    speechSynthesis.speak(utterance);
+    currentUtterance = utterance;
+    btn.classList.add('playing');
+    btn.innerHTML = '<i class="fas fa-stop"></i> Stop';
+}
+
+function shareArticle() {
+    if (!currentArticle) return;
+
+    if (navigator.share) {
+        navigator.share({
+            title: currentArticle.title,
+            text: currentArticle.excerpt,
+            url: window.location.href
+        }).catch(() => {});
+    } else {
+        navigator.clipboard.writeText(window.location.href).then(() => {
+            showToast('Link copied to clipboard!', 'success');
+        });
+    }
+}
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const icon = document.querySelector('#themeToggle i');
+
+    if (html.getAttribute('data-theme') === 'dark') {
+        html.removeAttribute('data-theme');
+        icon.className = 'fas fa-moon';
+        localStorage.setItem('newshub_theme', 'light');
+    } else {
+        html.setAttribute('data-theme', 'dark');
+        icon.className = 'fas fa-sun';
+        localStorage.setItem('newshub_theme', 'dark');
+    }
+}
+
+function toggleMobileMenu() {
+    document.getElementById('nav').classList.toggle('open');
+}
+
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const icon = toast.querySelector('i');
+
+    toast.className = 'toast ' + type;
+    toastMessage.textContent = message;
+
+    if (type === 'success') icon.className = 'fas fa-check-circle';
+    else if (type === 'error') icon.className = 'fas fa-exclamation-circle';
+    else icon.className = 'fas fa-info-circle';
+
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+</script>
 </body>
 </html>
